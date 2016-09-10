@@ -11,6 +11,28 @@ DAWN_END=7
 DAY_END=17
 DUSK_END=22
 
+# Auto-detect backlight device
+BACKLIGHT_DEVICES=(
+    "/sys/class/backlight/intel_backlight"
+    "/sys/class/backlight/amdgpu_bl0"
+    "/sys/class/backlight/radeon_bl0"
+    "/sys/class/backlight/acpi_video0"
+    "/sys/class/backlight/nvidia_backlight"
+)
+
+BACKLIGHT_PATH=""
+for device in "${BACKLIGHT_DEVICES[@]}"; do
+    if [ -d "$device" ]; then
+        BACKLIGHT_PATH="$device"
+        break
+    fi
+done
+
+if [ -z "$BACKLIGHT_PATH" ]; then
+    echo "Error: No backlight device found" >&2
+    exit 1
+fi
+
 # Determine target brightness based on time of day
 HOUR=$(date +%H)
 
@@ -29,4 +51,4 @@ else
 fi
 
 # Apply brightness
-echo $TARGET_BRIGHTNESS > /sys/class/backlight/acpi_video0/brightness
+echo $TARGET_BRIGHTNESS > "$BACKLIGHT_PATH/brightness"
